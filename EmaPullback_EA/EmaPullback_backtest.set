@@ -1,0 +1,22 @@
+; Preset backtest EmaPullback_EA untuk XAUUSD M5
+; Load di Strategy Tester: tab Inputs -> klik kanan -> Load
+; Parameter dengan flag Y di kolom terakhir ikut dioptimasi
+InpMagic=20260811||20260811||1||20260811||N
+InpLotMode=0||0||0||1||N
+InpLot=0.01||0.01||0.01||0.10||N
+InpRiskPercent=1.0||0.5||0.5||2.0||N
+InpMaxSpreadPts=60||0||10||100||N
+InpEmaTrendFast=50||30||10||100||N
+InpEmaTrendSlow=200||150||50||300||N
+InpEmaPullback=21||10||1||34||N
+InpNeedReversal=true||false||0||true||N
+InpRR=2.0||1.0||0.5||3.0||Y
+InpSLMode=0||0||0||1||N
+InpATRPeriod=14||10||2||20||N
+InpATRMult=1.5||1.0||0.25||2.5||Y
+InpSwingBars=10||5||1||20||N
+InpSLBufferPts=30||10||10||60||N
+InpBreakEvenRR=0.0||0.0||0.5||1.5||N
+InpMaxOpenTrades=1||1||1||3||N
+InpStartHour=0||0||1||23||N
+InpEndHour=0||0||1||23||N
