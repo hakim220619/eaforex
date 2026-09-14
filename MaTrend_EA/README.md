@@ -13,12 +13,15 @@ Parameter default **bukan tebakan** — dipilih lewat pencarian di 2,5 tahun dat
 |------|-----------|
 | `MaTrend_EA.mq5` | Source EA v1.00 (32 input) |
 | `MaTrend_EURUSD_H1.set` | Preset default — untuk **modal kecil** |
-| `MaTrend_XAUUSD_M5.set` | Preset emas untuk **modal kecil** (risiko ~$10/trade, modal ≥ $500) |
+| `MaTrend_XAUUSD_M5.set` | Preset emas untuk **akun standar/Pro modal $200–500** (EMA 34/100, SL 1.5×ATR, risiko ~$7.76/trade) |
 | `MaTrend_XAUUSD_H1.set` | Preset emas dengan edge terkuat, tapi **butuh modal ≥ $1150** |
+| `MaTrend_XAUUSD_H1.mq5` | **EA terpisah khusus XAUUSD H1** — strategi di atas sudah jadi default, plus trailing 2×ATR dan pengaman simbol/TF (lihat bagian bawah) |
+| `MaTrend_XAUUSD_M15.set` | Preset emas **M15 MA cross** (SMA 5/50, SL 1.5×ATR, RR 5) — risiko ~$13/trade, modal ≥ $300; data uji hanya 11 minggu |
 | `fetch_data.py` | Unduh OHLC dari Yahoo Finance ke CSV |
 | `sim_ma.py` | Port 1:1 logika EA untuk backtest cepat di CSV (bukan bagian EA) |
 | `*_h1.csv` | Data uji: 5 simbol H1, Nov 2023 – Sep 2026 |
-| `gold_m5.csv`, `gold_m15.csv`, `gold_h4.csv`, `gold_d1.csv` | Data emas lintas timeframe |
+| `gold_m5.csv`, `gold_m15.csv`, `gold_h4.csv`, `gold_d1.csv` | Data emas lintas timeframe (`gold_m5.csv` dan `gold_m15.csv` 26 Jun – 11 Sep 2026, 78 hari) |
+| `eurusd_m15.csv` | EURUSD M15 22 Jun – 11 Sep 2026, pasar pembanding untuk uji M15 |
 
 ## Cara Pakai
 
@@ -253,6 +256,206 @@ Dengan **akun cent**, semua baris di atas dibagi 100 — emas H1 (edge terkuat) 
 setara $11,5 saja. Kalau kamu punya akses akun cent Exness, itu jalan terbaik untuk
 memakai preset H1.
 
+## EA khusus XAUUSD H1: `MaTrend_XAUUSD_H1.mq5`
+
+Versi terpisah yang hanya membawa strategi emas H1, tanpa pilihan mode entry dan tanpa
+harus load `.set`. Bedanya dengan EA generik + preset:
+
+| | `MaTrend_EA` + `MaTrend_XAUUSD_H1.set` | `MaTrend_XAUUSD_H1.mq5` |
+|---|---|---|
+| Entry | pilihan cross / pullback / breakout | breakout saja (EMA 20/100, 20 bar) |
+| Trailing | off | **2×ATR, mulai +1R, dievaluasi di close bar** |
+| Pengaman | tidak ada | tolak init bila simbol bukan `XAU*` atau TF bukan H1 |
+| Rem risiko | `InpMaxRiskPct` 0 (off) | **5%** — di akun $100 standar entry otomatis diblok |
+| Manajemen posisi | tiap tick | sekali per bar, memakai close bar 1 (identik dengan `sim_ma.py`) |
+| Magic | 20260906 | 20260913 |
+
+**Jangan load `MaTrend_XAUUSD_H1.set` ke EA ini** — nama inputnya sama, jadi preset itu akan
+mematikan trailing (`InpTrailAtr=0`) dan rem risiko. Default EA-nya sudah benar.
+
+### Kenapa trailing dinyalakan di sini padahal di EURUSD dimatikan
+
+Diuji ulang di `gold_h1.csv` dengan spread $0.19 (Exness Pro XAUUSD 3 digit, 180–200 pts):
+
+| Emas H1 breakout | Trade | WR | Total | PF | maxDD | Train 60% | Test 40% | Kuartal + | Loss beruntun | Trade terpanjang |
+|---|---|---|---|---|---|---|---|---|---|---|
+| tanpa trailing (preset lama) | 239 | 23.8% | +102.1R | 1.56 | 15.1R | +45.4R | +55.7R | 9/10 | **14** | **863 bar (5 minggu)** |
+| **trailing 2×ATR (default EA ini)** | 326 | 42.3% | **+109.8R** | **1.65** | **13.0R** | +45.4R | **+66.2R** | **10/10** | **9** | **134 bar (6 hari)** |
+| trailing 1.5×ATR | 355 | — | — | — | — | +36.8R | +46.4R | 10/10 | 8 | 113 bar |
+| trailing 3×ATR | 302 | — | — | — | — | +35.7R | +55.2R | 9/10 | 9 | 465 bar |
+
+Selisih total R-nya kecil dan bisa saja derau. Yang membuat trailing layak dinyalakan di emas
+adalah dua hal lain: deret loss turun dari 14 ke 9, dan tidak ada lagi posisi menginap 5 minggu —
+swap XAUUSD jauh lebih mahal daripada EURUSD, dan simulasi ini tidak menghitung swap.
+Di EURUSD trailing tetap merugikan (+66R vs +70R); jangan disamakan.
+
+Sensitivitas lain di emas H1 (spread $0.19, tanpa trailing): EMA cepat 15 +106R · 30 +80R ·
+EMA lambat 80 +110R · 150 +53R · breakout 15 bar +80R · 30 bar +104R · SL 1.0×ATR +107R (tapi 395
+trade, DD 26R) · SL 2.0×ATR +53R · RR 3/4/7 +79R/+84R/+86R · spread $0.50 +100.7R. Tidak ada
+titik parameter yang sendirian menopang hasilnya, tapi EMA lambat 150 dan SL 2×ATR jelas lebih buruk.
+
+Per tahun (tanpa trailing): 2024 +7.6R (64 trade, mulai April) · 2025 +63.8R (110) · 2026 +30.7R (65).
+Sebagian besar hasil datang dari tren emas 2025 — periode datar seperti Q2–Q3 2024 (−0.1R, +1.9R)
+adalah bentuk normalnya, bukan pengecualian.
+
+### Modal
+
+SL rata-rata **$22.92 per 0.01 lot**. Simulasi akun, lot 0.01 tetap:
+
+| Modal awal | Hasil | Max drawdown |
+|---|---|---|
+| $100 | $2229 | **71%** (dan `InpMaxRiskPct=5%` akan memblok semua entry) |
+| $1200 | $3329 | 20% |
+
+Untuk modal $100–200 pilihannya tetap dua: **akun cent** (SL jadi $0.23) atau tetap di EURUSD H1.
+
+## MA cross di M15: `MaTrend_XAUUSD_M15.set`
+
+Pertanyaannya: adakah persilangan MA yang *profitable* di M15? Jawaban jujurnya: **ada banyak
+yang terlihat profitable, dan justru itu masalahnya.** Dari 342 kombinasi MA cross yang dicoba
+di emas M15 (EMA/SMA × 5 MA cepat × 4 MA lambat × 3 SL × 3 RR), **170 positif di train dan test
+sekaligus.** Jendela datanya (26 Jun – 11 Sep 2026) adalah emas naik +11% hampir tanpa koreksi —
+di pasar seperti itu hampir semua sistem trend-following menang. Itu bukan bukti edge.
+
+Preset default EURUSD (EMA 34/100) di emas M15 hanya +11.6R dengan train **−5.3R**. Jadi setelan
+H1 tidak bisa dipindahkan begitu saja ke M15.
+
+### Cara memilih supaya tidak menipu diri
+
+Alih-alih mengambil puncak in-sample (SMA 8/50: +57R, PF 2.55 — tapi **−18R di EURUSD M15**),
+setiap kandidat dinilai dengan **lima uji** dan skornya adalah **hasil terburuk** di antara kelimanya:
+
+| Uji | Tujuan |
+|---|---|
+| Emas M15, 60% pertama | in-sample |
+| Emas M15, 40% terakhir | out-of-sample waktu |
+| **EURUSD M15** (59 hari) | pasar lain — menyaring "cuma menunggangi rally emas" |
+| Emas H1, train 60% (2,4 tahun) | timeframe lain, sejarah panjang |
+| Emas H1, test 40% | idem |
+
+240 konfigurasi di wilayah MA cepat 5–13 / MA lambat 50–125; **53 lolos positif di kelima uji.**
+Yang terpilih adalah yang kasus terburuknya paling tinggi:
+
+| Konfigurasi | Emas M15 train | test | EURUSD M15 | Emas H1 train | test | Terburuk |
+|---|---|---|---|---|---|---|
+| **SMA 5/50 SL 1.5 RR 5** | +31.2R | +18.3R | +19.8R | +23.2R | +25.4R | **+18.3R** |
+| SMA 6/50 SL 1.5 RR 4 | +33.3R | +16.2R | +29.0R | +39.1R | +16.9R | +16.2R |
+| EMA 5/75 SL 2.0 RR 5 | +17.6R | +19.7R | +18.0R | +28.8R | +14.5R | +14.5R |
+| EMA 8/100 SL 1.5 RR 5 | +21.8R | +31.7R | +14.3R | +31.2R | +19.8R | +14.3R |
+| *SMA 8/50 SL 2.0 RR 5 (puncak in-sample)* | *+45.1R* | *+12.8R* | ***−18.3R*** | *+54.4R* | *+32.9R* | *−18.3R* |
+
+Bahwa 4 baris teratas saling bertetangga (MA cepat 5–8, MA lambat 50–100, SL 1.5) lebih
+meyakinkan daripada angka mana pun: ini sebuah wilayah, bukan satu titik yang kebetulan pas.
+
+### Hasil preset: emas M15, SMA 5/50, SL 1.5×ATR, RR 5
+
+26 Jun – 11 Sep 2026 (78 hari), spread $0.19, lot 0.01:
+
+| Metrik | Nilai |
+|---|---|
+| Trade | 83 dalam 11 minggu (≈7,5 per minggu) |
+| Win rate · Total · PF | 27.7% · **+49.5R** · 1.83 |
+| Max drawdown | 6.1R |
+| BUY / SELL | +23.7R (38) / +25.8R (45) — **seimbang**, bukan hanya ikut rally |
+| Per minggu | +4.9 +12.8 +0.9 +2.9 +8.9 +2.8 −2.0 +7.9 +3.9 +1.9 +5.8 −1.3 → 10 dari 12 minggu positif |
+| Risiko per trade | **$12.65** rata-rata, maksimum $24 |
+| Deret loss terpanjang | 6 |
+| Lama trade | median **3 jam**, p90 18 jam, hanya 6% melewati 23 jam → swap kecil |
+
+| Modal awal, lot 0.01 | Hasil 11 minggu | Max drawdown |
+|---|---|---|
+| $100 | $750 | 23% |
+| $300 | $950 | 15% |
+| **$500** | **$1150** | **12%** |
+| $1000 | $1650 | 7% |
+
+Sensitivitas (semua tetap positif): MA cepat 3 → +25R · 8 → +53R · MA lambat 37 → +53R ·
+62 → +34R · SL 1.0 → +42R · **SL 2.0 → +22R** · RR 4 → +61R · RR 7 → +56R · spread $0.60 → +48R ·
+ATR 20 → +40R. Yang merusak: trailing 2 ATR (+24R), break-even 1R (+34R), filter MA200 (+20R) —
+**biarkan semuanya off**, sama seperti preset lain.
+
+### Yang harus dipahami sebelum memakainya
+
+- **11 minggu, satu rezim pasar.** Tidak ada satu pun periode emas sideways atau turun panjang di
+  data ini. Uji EURUSD M15 dan emas H1 2,4 tahun menutup sebagian lubang itu, tapi tidak semuanya.
+- **Out-of-sample murni 8–11 Sep** (data yang diunduh setelah pencarian) hanya 7 trade, −0.1R — terlalu
+  sedikit untuk berarti apa-apa, ke arah mana pun.
+- 83 trade adalah sampel kecil. Di Exness demo ini terkumpul dalam ~10 minggu — itu waktu verifikasi
+  yang wajar sebelum uang sungguhan.
+- SMA 5 praktis adalah harga yang dihaluskan sedikit; sistem ini pada dasarnya "harga menembus SMA 50
+  dengan konfirmasi". Ia akan sering masuk dan sering kena SL kecil. Itu normal dengan WR 28%.
+- Modal $100 dengan lot 0.01 = risiko 12,6% per trade. Simulasinya selamat (DD 23%) tapi deret 6 loss =
+  −$76. Modal $300–500 atau akun cent jauh lebih masuk akal.
+
+### Modal $200: mana yang dipakai?
+
+Simulasi akun $200, lot 0.01 tetap (kolom kiri) dan Monte Carlo 2000 kali acak urutan trade yang
+sama (kolom kanan — ini yang menjawab "seberapa buruk bisa jadi", bukan hanya "berapa hasilnya"):
+
+| Preset | Risiko/trade (% dari $200) | Urutan asli | maxDD Monte Carlo median / p90 / p99 | Peluang equity pernah < $100 |
+|---|---|---|---|---|
+| EURUSD H1 (2,8 tahun) | $2.50 (1.2%) | $380, DD 7% | 12% / 19% / 28% | **0%** |
+| XAUUSD M5 cross (10 minggu) | $10.19 (5.1%), maks $27 | $882, DD 18% | 28% / 50% / 62% | 7% |
+| XAUUSD M15 SMA 5/50 (11 minggu) | $12.65 (6.3%), maks $24 | $850, DD 18% | 32% / 54% / 65% | 13% |
+| XAUUSD H1 breakout + trail (2,4 tahun) | $22 (11%), maks $174 | $2169, DD 51% | 53% / 76% / **103%** | **38%** |
+
+Drawdown 18% di "urutan asli" itu satu jalur sejarah yang kebetulan ramah. Dengan trade yang persis sama
+tapi urutan berbeda, median drawdown-nya 32% dan satu dari delapan skenario menyentuh $100. Emas H1 di
+akun standar $200 jelas keluar: 38% skenario tergerus separuh, dan satu SL bisa $174.
+
+**Akun cent mengubah semuanya**, karena lot bisa 0.01 cent = 1/100 lot standar, sehingga
+`InpLotMode = LOT_RISK_PERCENT` benar-benar bisa menahan risiko di 2% ($4) per trade:
+
+| Preset, akun cent, risiko 2% equity | $200 menjadi | maxDD asli | maxDD Monte Carlo median / p99 |
+|---|---|---|---|
+| XAUUSD M15 (11 minggu) | $481 | 13% | 20% / 35% |
+| XAUUSD M5 (10 minggu) | $601 | 21% | — |
+| **XAUUSD H1 + trail (2,4 tahun)** | **$1459** | **23%** | **23% / 40%** |
+
+Hasil dolarnya lebih kecil dari lot 0.01 tetap, tapi drawdown terburuknya terpotong separuh dan
+peluang habis mendekati nol. Itulah harga yang dibayar untuk bisa bertahan cukup lama sampai edge-nya
+(kalau memang ada) sempat bekerja.
+
+Rem `InpMaxRiskPct` **tidak** menolong di sini: 8–15% tidak melewati satu trade pun karena equity ikut
+tumbuh, jadi rem itu hanya berguna bila akun sudah tergerus — yang justru saat ia paling dibutuhkan.
+
+### Keputusan: tetap di Exness Pro (akun standar, lot minimum 0.01), modal $200
+
+Tanpa akun cent, lot tidak bisa di bawah 0.01, jadi risiko per trade di emas adalah angka tetap dalam dolar.
+Yang bisa dipilih hanya *preset mana* dan *SL berapa ATR*. Perbandingan di $200, lot 0.01, Monte Carlo 3000 acak:
+
+| Pilihan | Risiko/trade | Total (PF) | maxDD MC median / p99 | P(equity < $100) | P(DD ≥ 50%) |
+|---|---|---|---|---|---|
+| EURUSD H1 (2,8 tahun, 133 trade) | $2.50 = 1.2% | +70.7R (1.72) | 12% / 26% | **0%** | **0%** |
+| **XAUUSD M5 EMA 34/100, SL 1.5×ATR** | **$7.76 = 3.9%** (maks $20) | +63.4R (1.75) | 24% / 64% | **2.7%** | 3.8% |
+| XAUUSD M5 EMA 34/100, SL 2.0×ATR (preset lama) | $10.30 = 5.1% (maks $27) | +63.2R (1.83) | 28% / 86% | 7.9% | 10.8% |
+| XAUUSD M15 SMA 5/50, SL 1.5×ATR | $12.65 = 6.3% (maks $24) | +49.5R (1.83) | 32% / 98% | 11.6% | 16.9% |
+| XAUUSD M15 SMA 5/50, SL 1.0×ATR | $8.47 = 4.2% | +42.2R (1.46) | 38% / 102% | 15.5% | 26.1% |
+| XAUUSD H1 breakout | $22 = 11% (maks $174) | — | 53% / 103% | 38% | — |
+
+Memperketat SL menolong di M5 (SL 1.5 tetap +63R, risiko turun 25%) tapi **tidak** di M15 (SL 1.0
+menaikkan trade yang kena SL, PF jatuh ke 1.46, dan peluang tergerus justru naik). Jadi preset M5
+diubah ke SL 1.5; preset M15 dibiarkan 1.5.
+
+**Pilihan yang masuk akal di Pro $200 ada dua, dan keduanya punya harga:**
+
+1. **EURUSD H1** — satu-satunya dengan sejarah panjang dan peluang habis nol. Harganya: lambat.
+   Sekitar 4 trade per bulan, $5/bulan di lot 0.01, dan butuh 2 tahun untuk mengumpulkan 100 trade.
+2. **XAUUSD M5 EMA 34/100 SL 1.5** — cepat (≈45 trade/bulan) dan risiko 3.9% masih bisa ditahan.
+   Harganya: **edge-nya belum terbukti**, dan buktinya tipis di beberapa tempat sekaligus:
+   - Minggu out-of-sample murni 8–11 Sep 2026 (data diunduh setelah semua pencarian): **−6.7R dari 8 trade**,
+     1 menang 7 kalah. Delapan trade tidak membuktikan apa pun, tapi arahnya tidak menyenangkan.
+   - **74% profit datang dari Juli 2026 saja** (+47R dari +63R). Agustus +19R, Juni +3R, September −6R.
+   - **Parameter MA cepatnya rapuh**: EMA 21 → +11R, EMA 50 → +12R, EMA lambat 150 → −11R. Di EURUSD H1
+     tetangga parameter semuanya positif; di emas M5 hanya 34/100 yang bekerja. Itu ciri khas kurva yang
+     pas dengan satu periode, bukan edge yang luas.
+   - Trailing 2 ATR (+8R) dan break-even 1R (+23R) menghancurkannya — biarkan off.
+
+**Kalau memilih emas M5 di Pro $200**, perlakukan sebagai eksperimen dengan aturan berhenti yang ditulis
+sebelum mulai: lot 0.01 tetap, **stop total kalau equity turun ke $140** (−30%, ≈ 8 SL berturut-turut,
+angka deret loss terpanjang di data), dan jangan naikkan lot sebelum 100 trade demo/real menunjukkan
+PF > 1.3. Kalau September–Oktober 2026 ternyata seperti minggu OOS-nya, aturan itu yang menyelamatkan modal.
+
 ## Peringatan Risiko
 
 - **Win rate 23–27%.** Tiga dari empat trade rugi. Deret 8 loss beruntun (14 di emas H1) sudah
@@ -268,13 +471,13 @@ memakai preset H1.
 - **Data Yahoo Finance adalah proksi**: FX spot tanpa bid/ask broker, emas memakai futures COMEX.
   Spread dimodelkan sebagai biaya tetap, **swap dan komisi tidak dihitung**.
 - **133 trade** di EURUSD tetap sampel kecil untuk menyimpulkan edge, walaupun sudah 2,8 tahun.
-- **Preset emas M5 hanya diuji 60 hari / 99 trade** — batas maksimal data 5 menit dari Yahoo.
+- **Preset emas M5 (78 hari / 116 trade) dan M15 (78 hari / 83 trade) diuji sangat singkat** — batas data intraday Yahoo — dan minggu OOS pertama keduanya rugi.
   Sudah lolos train/test dan positif di 4 kuartal, tapi 60 hari tidak bisa menangkap pergantian
   rezim pasar. Hasil per kuartalnya juga menurun (+26.5R → +3.8R); itu bisa berarti peluruhan
   edge, bisa juga cuma derau. Uji ulang di tester Exness dengan data M5 setahun sebelum percaya.
 - Prosedur pemilihan sudah dijaga (train/test + peta konsistensi), tapi seluruh proses tetap
   menyentuh data yang sama berkali-kali. Anggap ini hipotesis yang layak diuji, bukan kesimpulan.
-- **EA ini belum pernah di-compile.** MetaTrader 5 tidak terpasang di mesin tempat file ini dibuat,
+- **Kedua EA belum pernah di-compile.** MetaTrader 5 tidak terpasang di mesin tempat file ini dibuat,
   jadi sintaks MQL5 diperiksa manual, bukan oleh MetaEditor. Compile dulu dengan F7 dan perbaiki
   bila ada error sebelum dipakai.
 

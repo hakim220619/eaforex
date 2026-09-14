@@ -1,9 +1,10 @@
 """Unduh OHLC dari Yahoo Finance ke CSV untuk sim_ma.py.
 
     python3 fetch_data.py GC=F 1h 730d gold_h1.csv
-    python3 fetch_data.py EURUSD=X 15m 60d eurusd_m15.csv
+    python3 fetch_data.py EURUSD=X 15m 59d eurusd_m15.csv
 
-Batas Yahoo: interval 15m maksimal ~60 hari, 1h maksimal ~730 hari, 1d panjang.
+Batas Yahoo: interval 15m/5m maksimal ~60 hari (pakai 59d -- 60d ditolak 404 sejak Sep 2026),
+1h maksimal ~730 hari, 1d panjang.
 Data ini proksi (futures / spot FX tanpa bid-ask broker) -- untuk menyaring ide,
 bukan untuk menilai hasil akhir. Penilaian akhir tetap di Strategy Tester MT5.
 """

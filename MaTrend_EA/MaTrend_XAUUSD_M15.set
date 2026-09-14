@@ -1,9 +1,9 @@
-; Preset MaTrend_EA v1.00 -- XAUUSD M5 (pilihan emas untuk akun STANDAR/Pro modal $200-500)
-; EMA 34/100 cross, SL 1.5 x ATR, TP RR 5 -- MA sama seperti EURUSD, SL diperketat dari 2.0 ke 1.5
-; supaya risiko per 0.01 lot turun dari ~$10 ke ~$7.76 (3.9% dari $200; maks ~$20).
-; Hasil 26 Jun - 11 Sep 2026: 116 trade, +63.4R, PF 1.75, train +42.9R / test +23.5R.
-; PERINGATAN: minggu OOS 8-11 Sep -6.7R (8 trade); 74% profit dari Juli saja; MA cepat 21 atau 50
-; menjatuhkan hasil ke +11R. Edge-nya BELUM terbukti -- verifikasi di demo dulu (lihat README).
+; Preset MaTrend_EA v1.00 -- XAUUSD M15, MA cross
+; SMA 5/50 cross, SL 1.5 x ATR14, TP RR 5, tanpa filter/trailing/BE.
+; Dipilih dengan kriteria "terburuk dari 5 uji harus paling tinggi" (emas M15 train/test,
+; EURUSD M15, emas H1 train/test), BUKAN puncak in-sample. Lihat README bagian M15.
+; Risiko ~$12.65 per trade di lot 0.01 (maks ~$24). Modal yang masuk akal: >= $300, ideal $500.
+; Data uji hanya 11 minggu (26 Jun - 11 Sep 2026), periode emas naik +11% -- anggap hipotesis.
 ; Load di Strategy Tester: tab Inputs -> klik kanan -> Load
 ; Kolom: nilai||start||step||stop||optimasi(Y/N)
 InpMagic=20260906||20260906||1||20260906||N
@@ -17,18 +17,18 @@ InpMaxSpreadPts=350||200||50||500||N
 InpMaxSpreadRiskPct=8.0||4.0||2.0||12.0||N
 InpSpreadCompensate=true||false||0||true||N
 InpSlippagePts=30||10||10||50||N
-InpMaType=1||0||1||3||N
-InpMaFast=34||10||4||50||Y
-InpMaSlow=100||50||25||200||Y
+InpMaType=0||0||1||3||N
+InpMaFast=5||3||1||13||Y
+InpMaSlow=50||37||5||75||Y
 InpUseFilter=false||false||0||true||N
 InpMaFilter=200||100||50||300||N
 InpSlopeBars=0||0||5||20||N
-InpEntry=0||0||1||2||Y
+InpEntry=0||0||1||2||N
 InpPullbackBars=8||3||1||12||N
 InpBreakoutBars=20||10||10||50||N
 InpAtrPeriod=14||10||2||20||N
-InpSlAtr=1.5||1.0||0.25||2.5||Y
-InpRR=5.0||2.0||1.0||7.0||Y
+InpSlAtr=1.5||1.0||0.5||3.0||Y
+InpRR=5.0||3.0||1.0||7.0||Y
 InpMinAtrPct=0.0||0.0||0.01||0.05||N
 InpBreakEvenRR=0.0||0.0||0.5||2.0||N
 InpBeOffsetAtr=0.05||0.0||0.05||0.2||N
