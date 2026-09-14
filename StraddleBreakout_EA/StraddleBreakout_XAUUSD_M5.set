@@ -1,0 +1,14 @@
+; Preset StraddleBreakout_EA untuk XAUUSD M5 (Every tick based on real ticks)
+InpMagic=20260806
+InpLot=0.01
+InpMaxSpreadPts=60
+InpDistPts=80
+InpSLPts=160
+InpTPPts=240
+InpRecenter=true
+InpRecenterMinPts=20
+InpDeleteOpposite=true
+InpTrailPts=0
+InpTrailStepPts=20
+InpStartHour=0
+InpEndHour=0

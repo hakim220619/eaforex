@@ -1,0 +1,43 @@
+; Preset SMC_Structure_EA v1.10 -- Exness Pro XAUUSD M5 (3 digit, spread normal 180-200 pts)
+; Load di Strategy Tester: tab Inputs -> klik kanan -> Load
+; Kolom: nilai||start||step||stop||optimasi(Y/N)
+InpMagic=20260825||20260825||1||20260825||N
+InpLotMode=0||0||0||1||N
+InpLot=0.01||0.01||0.01||0.10||N
+InpRiskPercent=1.0||0.5||0.5||2.0||N
+InpMaxRiskPct=0.0||0.0||1.0||5.0||N
+InpMaxOpenTrades=1||1||1||3||N
+InpStartHour=0||0||1||23||N
+InpEndHour=0||0||1||23||N
+InpMaxSpreadPts=350||200||50||500||N
+InpMaxSpreadRiskPct=8.0||4.0||2.0||12.0||N
+InpSpreadCompensate=true||false||0||true||N
+InpSwingBars=3||2||1||5||Y
+InpLookback=300||200||100||500||N
+InpAtrPeriod=14||10||2||20||N
+InpSweepMaxBars=30||10||10||60||Y
+InpSweepMinAtr=0.0||0.0||0.1||0.5||N
+InpSweepMustClose=false||false||0||true||N
+InpMssMinBreakAtr=0.0||0.0||0.1||0.5||N
+InpMinLegAtr=2.0||1.0||0.5||3.5||Y
+InpUseTrendFilter=false||false||0||true||N
+InpEmaPeriod=200||100||50||300||N
+InpZoneMode=0||0||1||3||Y
+InpFvgPick=0||0||1||1||N
+InpMinFvgAtr=0.05||0.0||0.05||0.3||N
+InpObRequireSweep=true||false||0||true||N
+InpZoneEntryPct=50||0||25||100||Y
+InpEntryValidBars=15||5||5||30||N
+InpSlMode=0||0||1||1||N
+InpSlBufferAtr=0.3||0.1||0.1||0.6||Y
+InpSlMinAtr=1.0||0.5||0.25||1.5||Y
+InpTpMode=0||0||1||1||N
+InpRR=2.0||1.0||0.5||4.0||N
+InpMinRR=1.5||1.0||0.5||3.0||N
+InpMaxRR=5.0||3.0||1.0||8.0||N
+InpTpBufferAtr=0.1||0.0||0.05||0.3||N
+InpBreakEvenRR=0.0||0.0||0.5||2.0||N
+InpBeOffsetAtr=0.05||0.0||0.05||0.2||N
+InpDraw=false||false||0||true||N
+InpColorBuy=3050327
+InpColorSell=2237106
